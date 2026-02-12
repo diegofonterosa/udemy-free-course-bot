@@ -144,12 +144,3 @@ It helps the repository gain visibility!
 
 
 ---
-
-# 🔥 Después haz esto
-
-En terminal:
-
-```bash
-git add .
-git commit -m "Upgrade README to professional version"
-git push
