@@ -1,9 +1,15 @@
 import feedparser
 import requests
 import os
+from dotenv import load_dotenv
 
-TOKEN = "YOUR_TOKEN"
-CHAT_ID = "YOUR_CHAT_ID"
+load_dotenv()
+
+TOKEN = os.getenv("TELEGRAM_TOKEN")
+CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
+
+if not TOKEN or not CHAT_ID:
+    raise ValueError("Faltan las variables de entorno TELEGRAM_TOKEN o TELEGRAM_CHAT_ID")
 
 RSS_URL = "https://www.discudemy.com/feed"
 FILE = "sent.txt"
