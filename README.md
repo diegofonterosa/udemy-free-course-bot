@@ -1,146 +1,168 @@
 # 🎓 Udemy Free Course Telegram Bot
 
-> Automated Python bot that monitors public RSS feeds to detect free Udemy courses and sends real-time notifications directly to Telegram.
+[![Python](https://img.shields.io/badge/Python-3.x-3776AB?style=flat-square&logo=python&logoColor=white)](https://www.python.org/)
+[![Telegram](https://img.shields.io/badge/Telegram-Bot_API-26A5E4?style=flat-square&logo=telegram&logoColor=white)](https://core.telegram.org/bots/api)
+[![RSS](https://img.shields.io/badge/RSS-discudemy.com-FFA500?style=flat-square&logo=rss&logoColor=white)]()
+[![Estado](https://img.shields.io/badge/Estado-Completado-brightgreen?style=flat-square)]()
 
-Built with a practical, automation-first mindset, this project demonstrates real-world scripting skills commonly used in systems engineering and DevOps environments.
-
----
-
-## 📌 Overview
-
-Finding high-quality free courses can be time-consuming.  
-This bot automates the process by continuously scanning public RSS feeds and instantly notifying the user whenever a new free course is published.
-
-The project focuses on **efficiency, simplicity, and real-world usability** rather than academic examples.
+Bot en Python que monitoriza el feed RSS de **[discudemy.com](https://www.discudemy.com)** para detectar cursos gratuitos de Udemy y enviar notificaciones automáticas a Telegram. Incluye un sistema de deduplicación mediante archivo local para evitar notificaciones repetidas.
 
 ---
 
-## 🚀 Key Features
+## 📂 Estructura del Proyecto
 
-✅ Automatic detection of newly published free courses  
-✅ Instant Telegram notifications  
-✅ Duplicate prevention system  
-✅ Lightweight and fast execution  
-✅ Beginner-friendly yet production-oriented architecture  
-
----
-
-## 🧠 Technical Skills Demonstrated
-
-This project showcases practical abilities in:
-
-- API consumption (Telegram Bot API)
-- Automation scripting
-- Data parsing (RSS feeds)
-- Event-driven workflows
-- Git version control
-- Dependency management
-- Clean project structuring
-
-These are core skills for roles in:
-
-👉 Systems Administration  
-👉 Cybersecurity  
-👉 DevOps  
-👉 Cloud Engineering  
+```
+udemy-free-course-bot/
+│
+├── 📄 bot.py          # Script principal del bot
+├── 📄 sent.txt        # Registro de cursos ya notificados (auto-generado)
+├── 📄 .env            # Variables de entorno con credenciales (no subir)
+├── 📄 .gitignore
+└── 📄 README.md
+```
 
 ---
 
-## 🛠 Tech Stack
+## ⚙️ Cómo Funciona
 
-| Technology | Purpose |
-|------------|------------|
-| Python | Core scripting language |
-| feedparser | RSS data extraction |
-| requests | HTTP communication |
-| Telegram Bot API | Notification system |
-| Git & GitHub | Version control |
+```
+discudemy.com/feed (RSS)
+        │
+        ▼
+feedparser — parsea hasta 10 entradas del feed
+        │
+        ▼
+Comprueba sent.txt — ¿ya fue notificado este enlace?
+        │
+   NO ──┘
+        ▼
+Telegram Bot API — envía mensaje con título + enlace
+        │
+        ▼
+sent.txt — registra el enlace para evitar duplicados
+```
+
+1. Lee el feed RSS de `discudemy.com/feed` con `feedparser`
+2. Comprueba los últimos **10 cursos** del feed
+3. Filtra los que ya fueron enviados consultando `sent.txt`
+4. Envía un mensaje de Telegram por cada curso nuevo con título y enlace
+5. Guarda el enlace en `sent.txt` para no volver a notificarlo
 
 ---
 
-## ⚙️ Installation
+## 🚀 Tecnologías Utilizadas
 
-### 1️⃣ Clone the repository
+| Librería | Uso |
+|---|---|
+| **feedparser** | Parseo del feed RSS de discudemy.com |
+| **requests** | Llamadas HTTP a la Telegram Bot API |
+| **python-dotenv** | Carga de credenciales desde `.env` |
+| **os** | Gestión de archivos y variables de entorno |
+
+---
+
+## ⚙️ Instalación y Configuración
+
+### 1. Clonar el repositorio
 
 ```bash
 git clone https://github.com/diegofonterosa/udemy-free-course-bot.git
 cd udemy-free-course-bot
+```
 
-2️⃣ Create a virtual environment
-python -m venv venv
+### 2. Instalar dependencias
 
+```bash
+pip install feedparser requests python-dotenv
+```
 
-Activate it:
+### 3. Crear el archivo `.env`
 
-Windows
+Crea un archivo `.env` en la raíz del proyecto con tus credenciales de Telegram:
 
-venv\Scripts\activate
+```env
+TELEGRAM_TOKEN=tu_token_del_bot
+TELEGRAM_CHAT_ID=tu_chat_id
+```
 
+> ⚠️ **Nunca subas el archivo `.env` a un repositorio público.** Ya está incluido en el `.gitignore`.
 
-Linux / Mac
+#### ¿Cómo obtener las credenciales?
 
-source venv/bin/activate
+- **`TELEGRAM_TOKEN`** — Habla con [@BotFather](https://t.me/BotFather) en Telegram, crea un bot y copia el token
+- **`TELEGRAM_CHAT_ID`** — Habla con [@userinfobot](https://t.me/userinfobot) para obtener tu Chat ID
 
-3️⃣ Install dependencies
-pip install feedparser requests
+### 4. Ejecutar el bot
 
-4️⃣ Configure your Telegram credentials
-
-Open bot.py and replace:
-
-TOKEN = "YOUR_TELEGRAM_BOT_TOKEN"
-CHAT_ID = "YOUR_CHAT_ID"
-
-
-⚠️ Never expose real tokens in public repositories.
-
-5️⃣ Run the bot
+```bash
 python bot.py
+```
 
-
-Once running, you will automatically receive Telegram alerts whenever new free courses are detected.
-
-🔐 Security Note
-
-Credentials should ideally be stored using environment variables rather than hardcoded values.
-
-Future versions of this project will implement secure credential handling.
-
-🔮 Roadmap / Future Improvements
-
-Planned enhancements include:
-
-Docker containerization
-
-Cloud deployment (24/7 uptime)
-
-Environment variable support
-
-Course filtering by category
-
-Database integration
-
-Multi-source aggregation
-
-Web dashboard
-
-🎯 Why This Project Matters
-
-This is not just a tutorial script — it reflects the type of automation engineers build to eliminate repetitive tasks.
-
-Projects like this demonstrate initiative, problem-solving ability, and a practical understanding of modern technical workflows.
-
-👨‍💻 Author
-
-Diego Pérez
-ASIR Student | Future Cybersecurity & Systems Specialist
-
-Passionate about automation, infrastructure, and security-oriented technologies.
-
-⭐ If you found this project useful...
-
-Consider giving it a star ⭐
-It helps the repository gain visibility!
-
+La primera vez que se ejecute se creará automáticamente el archivo `sent.txt` donde se registran los cursos ya notificados.
 
 ---
+
+## 📩 Ejemplo de Notificación
+
+Cuando se detecta un curso nuevo, el bot envía en Telegram:
+
+```
+🎓 CURSO GRATIS DETECTADO
+
+The Complete Python Bootcamp From Zero to Hero in Python
+https://www.discudemy.com/...
+```
+
+---
+
+## 🔒 Seguridad
+
+- Las credenciales se cargan desde `.env` con `python-dotenv`, **nunca hardcodeadas** en el código
+- Al arrancar, el script valida que `TELEGRAM_TOKEN` y `TELEGRAM_CHAT_ID` estén definidas; si no, lanza un `ValueError` y detiene la ejecución
+- El archivo `sent.txt` actúa como caché local para prevenir notificaciones duplicadas
+
+---
+
+## 🔮 Mejoras Futuras
+
+- [ ] Ejecución programada con `cron` o `schedule` para monitoreo continuo
+- [ ] Contenedorización con Docker para despliegue en la nube (uptime 24/7)
+- [ ] Filtrado de cursos por categoría o palabras clave
+- [ ] Sustitución de `sent.txt` por base de datos (SQLite / MongoDB)
+- [ ] Soporte para múltiples fuentes RSS
+- [ ] Panel web de control
+
+---
+
+## 🎯 Habilidades Demostradas
+
+- ✅ Automatización de tareas con Python
+- ✅ Consumo de feeds RSS con `feedparser`
+- ✅ Integración con la Telegram Bot API mediante `requests`
+- ✅ Gestión segura de credenciales con variables de entorno (`dotenv`)
+- ✅ Sistema de deduplicación con persistencia en fichero
+- ✅ Manejo de errores HTTP y validación de configuración
+
+---
+
+## 📋 Requisitos
+
+- Python 3.8+
+- Cuenta de Telegram y bot creado con [@BotFather](https://t.me/BotFather)
+
+---
+
+## 👨‍💻 Autor
+
+**Diego Pérez Fonterosa**
+
+[![GitHub](https://img.shields.io/badge/GitHub-diegofonterosa-181717?style=flat-square&logo=github)](https://github.com/diegofonterosa)
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-Diego%20Pérez-0A66C2?style=flat-square&logo=linkedin)](https://linkedin.com/in/diegofonterosa)
+
+> Técnico de Soporte CRA en Segursystem Europa · Cursando ASIR y Máster en Ciberseguridad
+
+---
+
+## 📄 Licencia
+
+Este proyecto tiene fines educativos y personales. Puedes usar, modificar y distribuir el código con libertad mencionando al autor original.
