@@ -159,7 +159,7 @@ https://www.discudemy.com/...
 [![GitHub](https://img.shields.io/badge/GitHub-diegofonterosa-181717?style=flat-square&logo=github)](https://github.com/diegofonterosa)
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-Diego%20Pérez-0A66C2?style=flat-square&logo=linkedin)](https://linkedin.com/in/diegofonterosa)
 
-> Técnico de Soporte CRA en Segursystem Europa · Cursando ASIR y Máster en Ciberseguridad
+> Cursando ASIR y Máster en Ciberseguridad
 
 ---
 
