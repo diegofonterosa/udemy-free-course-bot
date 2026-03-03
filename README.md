@@ -3,9 +3,8 @@
 [![Python](https://img.shields.io/badge/Python-3.x-3776AB?style=flat-square&logo=python&logoColor=white)](https://www.python.org/)
 [![Telegram](https://img.shields.io/badge/Telegram-Bot_API-26A5E4?style=flat-square&logo=telegram&logoColor=white)](https://core.telegram.org/bots/api)
 [![RSS](https://img.shields.io/badge/RSS-discudemy.com-FFA500?style=flat-square&logo=rss&logoColor=white)]()
-[![Estado](https://img.shields.io/badge/Estado-Completado-brightgreen?style=flat-square)]()
 
-Bot en Python que monitoriza el feed RSS de **[discudemy.com](https://www.discudemy.com)** para detectar cursos gratuitos de Udemy y enviar notificaciones automáticas a Telegram. Incluye un sistema de deduplicación mediante archivo local para evitar notificaciones repetidas.
+Bot en Python que monitoriza el feed RSS de **[discudemy.com](https://www.discudemy.com)** para detectar cursos gratuitos de Udemy y enviar notificaciones automáticas a Telegram. Con **scheduling interno** que revisa cada 5 minutos sin necesidad de cron.
 
 ---
 
@@ -13,12 +12,14 @@ Bot en Python que monitoriza el feed RSS de **[discudemy.com](https://www.discud
 
 ```
 udemy-free-course-bot/
-│
-├── 📄 bot.py          # Script principal del bot
-├── 📄 sent.txt        # Registro de cursos ya notificados (auto-generado)
-├── 📄 .env            # Variables de entorno con credenciales (no subir)
-├── 📄 .gitignore
-└── 📄 README.md
+├── bot.py                          # Script principal (con scheduling)
+├── requirements.txt                # Dependencias
+├── sent.txt                        # Registro de cursos notificados (auto-generado)
+├── .env                            # Variables de entorno (no subir)
+├── .gitignore
+├── README.md
+├── setup_startup.sh                # Helper para registrar en cron
+└── udemy-free-course-bot.service   # Plantilla systemd
 ```
 
 ---
@@ -29,39 +30,39 @@ udemy-free-course-bot/
 discudemy.com/feed (RSS)
         │
         ▼
-feedparser — parsea hasta 10 entradas del feed
+feedparser — parsea hasta 10 entradas
         │
         ▼
-Comprueba sent.txt — ¿ya fue notificado este enlace?
+sent.txt — ¿ya fue notificado?
         │
    NO ──┘
         ▼
-Telegram Bot API — envía mensaje con título + enlace
+Telegram Bot API — envía mensaje
         │
         ▼
-sent.txt — registra el enlace para evitar duplicados
+sent.txt — registra para evitar duplicados
 ```
 
-1. Lee el feed RSS de `discudemy.com/feed` con `feedparser`
-2. Comprueba los últimos **10 cursos** del feed
-3. Filtra los que ya fueron enviados consultando `sent.txt`
-4. Envía un mensaje de Telegram por cada curso nuevo con título y enlace
-5. Guarda el enlace en `sent.txt` para no volver a notificarlo
+1. Lee el feed RSS de `discudemy.com/feed`
+2. Filtra cursos nuevos (no en `sent.txt`)
+3. Envía notificación por Telegram
+4. Registra el enlace para no volver a notificarlo
+5. **Repite automáticamente cada 5 minutos** ✨
 
 ---
 
-## 🚀 Tecnologías Utilizadas
+## 🚀 Tecnologías
 
 | Librería | Uso |
 |---|---|
-| **feedparser** | Parseo del feed RSS de discudemy.com |
-| **requests** | Llamadas HTTP a la Telegram Bot API |
-| **python-dotenv** | Carga de credenciales desde `.env` |
-| **os** | Gestión de archivos y variables de entorno |
+| **feedparser** | Parseo del RSS |
+| **requests** | HTTP a Telegram API |
+| **python-dotenv** | Credenciales desde `.env` |
+| **schedule** | Ejecución periódica cada 5 min |
 
 ---
 
-## ⚙️ Instalación y Configuración
+## ⚙️ Instalación
 
 ### 1. Clonar el repositorio
 
@@ -73,24 +74,29 @@ cd udemy-free-course-bot
 ### 2. Instalar dependencias
 
 ```bash
-pip install feedparser requests python-dotenv
+pip install -r requirements.txt
+```
+
+O manualmente:
+
+```bash
+pip install feedparser requests python-dotenv schedule
 ```
 
 ### 3. Crear el archivo `.env`
 
-Crea un archivo `.env` en la raíz del proyecto con tus credenciales de Telegram:
+Crea un `.env` con tus credenciales:
 
 ```env
 TELEGRAM_TOKEN=tu_token_del_bot
 TELEGRAM_CHAT_ID=tu_chat_id
 ```
 
-> ⚠️ **Nunca subas el archivo `.env` a un repositorio público.** Ya está incluido en el `.gitignore`.
+**Cómo obtener:**
+- **Token**: Habla con [@BotFather](https://t.me/BotFather), crea un bot
+- **Chat ID**: Habla con [@userinfobot](https://t.me/userinfobot)
 
-#### ¿Cómo obtener las credenciales?
-
-- **`TELEGRAM_TOKEN`** — Habla con [@BotFather](https://t.me/BotFather) en Telegram, crea un bot y copia el token
-- **`TELEGRAM_CHAT_ID`** — Habla con [@userinfobot](https://t.me/userinfobot) para obtener tu Chat ID
+> ⚠️ **Nunca subas `.env` a Git** (está en `.gitignore`)
 
 ### 4. Ejecutar el bot
 
@@ -98,13 +104,13 @@ TELEGRAM_CHAT_ID=tu_chat_id
 python bot.py
 ```
 
-La primera vez que se ejecute se creará automáticamente el archivo `sent.txt` donde se registran los cursos ya notificados.
+El bot arrancará e **imprimirá logs cada 5 minutos**. Para detenerlo, usa `Ctrl+C`.
 
 ---
 
 ## 📩 Ejemplo de Notificación
 
-Cuando se detecta un curso nuevo, el bot envía en Telegram:
+Cuando detecta un curso nuevo, envía:
 
 ```
 🎓 CURSO GRATIS DETECTADO
@@ -117,20 +123,76 @@ https://www.discudemy.com/...
 
 ## 🔒 Seguridad
 
-- Las credenciales se cargan desde `.env` con `python-dotenv`, **nunca hardcodeadas** en el código
-- Al arrancar, el script valida que `TELEGRAM_TOKEN` y `TELEGRAM_CHAT_ID` estén definidas; si no, lanza un `ValueError` y detiene la ejecución
-- El archivo `sent.txt` actúa como caché local para prevenir notificaciones duplicadas
+- ✅ Credenciales en `.env`, nunca hardcodeadas
+- ✅ Validación temprana de variables de entorno
+- ✅ Manejo de errores en HTTP y RSS
+- ✅ `sent.txt` como caché local para evitar duplicados
 
 ---
 
-## 🔮 Mejoras Futuras
+## 🚀 Ejecución Automática al Arrancar
 
-- [ ] Ejecución programada con `cron` o `schedule` para monitoreo continuo
-- [ ] Contenedorización con Docker para despliegue en la nube (uptime 24/7)
-- [ ] Filtrado de cursos por categoría o palabras clave
-- [ ] Sustitución de `sent.txt` por base de datos (SQLite / MongoDB)
-- [ ] Soporte para múltiples fuentes RSS
-- [ ] Panel web de control
+El bot incluye **scheduling interno** — revisa cada 5 minutos. Solo necesitas que se inicie al arrancar tu portátil.
+
+### Opción 1: Cron `@reboot` (simple)
+
+Edita el crontab:
+
+```bash
+crontab -e
+```
+
+Añade:
+
+```cron
+@reboot cd /ruta/al/proyecto && /usr/bin/python3 bot.py
+```
+
+O usa el script incluido:
+
+```bash
+./setup_startup.sh /ruta/al/proyecto
+```
+
+### Opción 2: Servicio systemd (recomendado)
+
+Copia la plantilla a `/etc/systemd/system/`:
+
+```bash
+sudo cp /ruta/al/proyecto/udemy-free-course-bot.service /etc/systemd/system/
+```
+
+Edita el fichero y reemplaza `TU_USUARIO` y las rutas:
+
+```bash
+sudo nano /etc/systemd/system/udemy-free-course-bot.service
+```
+
+Luego:
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable udemy-free-course-bot.service
+sudo systemctl start udemy-free-course-bot.service
+```
+
+Verifica:
+
+```bash
+sudo systemctl status udemy-free-course-bot
+journalctl -u udemy-free-course-bot -f   # ver logs
+```
+
+---
+
+## 🔮 Variables de Entorno Opcionales
+
+Además de `TELEGRAM_TOKEN` y `TELEGRAM_CHAT_ID`, puedes usar:
+
+```env
+RSS_URL=https://www.discudemy.com/feed    # fuente RSS (por defecto)
+SENT_FILE=sent.txt                         # fichero de cursos enviados (por defecto)
+```
 
 ---
 
@@ -138,17 +200,29 @@ https://www.discudemy.com/...
 
 - ✅ Automatización de tareas con Python
 - ✅ Consumo de feeds RSS con `feedparser`
-- ✅ Integración con la Telegram Bot API mediante `requests`
-- ✅ Gestión segura de credenciales con variables de entorno (`dotenv`)
-- ✅ Sistema de deduplicación con persistencia en fichero
-- ✅ Manejo de errores HTTP y validación de configuración
+- ✅ Integración con Telegram Bot API
+- ✅ Scheduling periódico interno
+- ✅ Gestión segura de credenciales
+- ✅ Sistema de deduplicación con persistencia
+- ✅ Logging y manejo de errores
+
+---
+
+## 🔮 Mejoras Futuras
+
+- [ ] Filtrado de cursos por categoría o palabras clave
+- [ ] Sustituir `sent.txt` por SQLite/MongoDB
+- [ ] Soporte para múltiples fuentes RSS
+- [ ] Panel web de estadísticas
+- [ ] Docker para despliegue en la nube
 
 ---
 
 ## 📋 Requisitos
 
 - Python 3.8+
-- Cuenta de Telegram y bot creado con [@BotFather](https://t.me/BotFather)
+- Cuenta de Telegram
+- Bot creado con [@BotFather](https://t.me/BotFather)
 
 ---
 
@@ -159,10 +233,8 @@ https://www.discudemy.com/...
 [![GitHub](https://img.shields.io/badge/GitHub-diegofonterosa-181717?style=flat-square&logo=github)](https://github.com/diegofonterosa)
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-Diego%20Pérez-0A66C2?style=flat-square&logo=linkedin)](https://linkedin.com/in/diegofonterosa)
 
-> Cursando ASIR y Máster en Ciberseguridad
-
 ---
 
 ## 📄 Licencia
 
-Este proyecto tiene fines educativos y personales. Puedes usar, modificar y distribuir el código con libertad mencionando al autor original.
+Proyecto educativo. Usa, modifica y distribuye libremente mencionando al autor original.

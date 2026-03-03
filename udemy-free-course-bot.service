@@ -1,0 +1,12 @@
+[Unit]
+Description=Udemy free-course Telegram bot
+After=network.target
+
+[Service]
+Type=idle
+User=YOUR_USER_HERE    # replace with the user that should run the bot
+WorkingDirectory=/path/to/udemy-free-course-bot
+ExecStart=/usr/bin/python3 /path/to/udemy-free-course-bot/bot.py
+
+[Install]
+WantedBy=multi-user.target
